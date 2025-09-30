@@ -123,6 +123,7 @@ def dynamic_c_index(model, features, event_times, event_indicators):
     concordant = 0
     discordant = 0
     tied_time = 0
+    tied_risk = 0
 
     for i in range(n):
         for j in range(i + 1, n):
@@ -167,8 +168,10 @@ def dynamic_c_index(model, features, event_times, event_indicators):
                 risk_j = model(tensor_j, time_i)
                 if risk_i > risk_j:
                     concordant += 1
-                elif risk_i <= risk_j:
+                elif risk_i < risk_j:
                     discordant += 1
+                else:
+                    tied_risk += 1
             else:
                 tensor_i = torch.tensor(features[[i]], dtype=torch.float32)
                 tensor_j = torch.tensor(features[[j]], dtype=torch.float32)
@@ -177,19 +180,22 @@ def dynamic_c_index(model, features, event_times, event_indicators):
                 risk_j = model(tensor_j, time_j)
                 if risk_j > risk_i:
                     concordant += 1
-                elif risk_j <= risk_i:
+                elif risk_j < risk_i:
                     discordant += 1
+                else:
+                    tied_risk += 1
 
     print(f"Concordant: {concordant}")
     print(f"Discordant: {discordant}")
     print(f"Tied Time: {tied_time}")
+    print(f"Tied Risk: {tied_risk}")
     # Calculate C-index
-    total_comparable = concordant + discordant
+    total_comparable = concordant + discordant + tied_risk
 
     if total_comparable == 0:
         return 0.5  # No comparable pairs
 
     # C-index with tied risk handling
-    c_index = (concordant) / total_comparable
+    c_index = (concordant + 0.5 * tied_risk) / total_comparable
 
     return c_index
