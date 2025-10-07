@@ -83,10 +83,10 @@ def c_index(predicted_risks, event_times, event_indicators):
             else:
                 discordant += 1
 
-    print(f"Concordant: {concordant}")
-    print(f"Discordant: {discordant}")
-    print(f"Tied Risk: {tied_risk}")
-    print(f"Tied Time: {tied_time}")
+    # print(f"Concordant: {concordant}")
+    # print(f"Discordant: {discordant}")
+    # print(f"Tied Risk: {tied_risk}")
+    # print(f"Tied Time: {tied_time}")
     # Calculate C-index
     total_comparable = concordant + discordant + tied_risk
 
