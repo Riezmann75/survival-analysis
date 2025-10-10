@@ -22,18 +22,26 @@ class GridSearch:
         self.weight_decays = search_space.weight_decays
         self.num_epochs = search_space.num_epochs
 
-    def __call__(self, Model: nn.Module, train_fn, **kwargs):
-        for lr in self.learning_rates:
-            for optimizer in self.optimizers:
+    def __call__(self, Model: nn.Module, train_fn):
+        for optimizer in self.optimizers:
+            for lr in self.learning_rates:
                 for weight_decay in self.weight_decays:
                     for num_epoch in self.num_epochs:
                         # average losses each epoch
                         model = Model()
-                        configured_optimizer = optimizer(
-                            lr=lr,
-                            weight_decay=weight_decay,
-                            model=model,
-                        )
+                        if "Adam" in str(optimizer):
+                            configured_optimizer = optimizer(
+                                lr=lr,
+                                weight_decay=weight_decay,
+                                model=model,
+                            )
+                        else:
+                            configured_optimizer = optimizer(
+                                lr=lr,
+                                weight_decay=weight_decay,
+                                model=model,
+                                momentum=0.9,
+                            )
                         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
                             configured_optimizer,
                             T_max=num_epoch,
