@@ -9,8 +9,6 @@ import warnings
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-torch.set_default_device("cuda" if torch.cuda.is_available() else "cpu")
-
 path = "dataset/Breast Cancer METABRIC.csv"
 
 processed_data = load_and_preprocess_data(path)
@@ -19,9 +17,23 @@ numeric_cols = processed_data["numeric_cols"]
 categorical_cols = processed_data["categorical_cols"]
 sets = processed_data["sets"]
 
-train_loader = DataLoader(sets["train"], batch_size=64, shuffle=True)
-val_loader = DataLoader(sets["val"], batch_size=64, shuffle=False)
-test_loader = DataLoader(sets["test"], batch_size=len(sets["test"]), shuffle=False)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+train_loader = DataLoader(
+    sets["train"],
+    batch_size=64,
+    shuffle=True,
+)
+val_loader = DataLoader(
+    sets["val"],
+    batch_size=64,
+    shuffle=False,
+)
+test_loader = DataLoader(
+    sets["test"],
+    batch_size=len(sets["test"]),
+    shuffle=False,
+)
 
 
 search_space = SearchSpace.model_validate(
@@ -36,7 +48,7 @@ search_space = SearchSpace.model_validate(
     }
 )
 
-grid_searcher = GridSearch(search_space)
+grid_searcher = GridSearch(search_space, device=device)
 grid_searcher(
     Model=NeuralNetwork,
     model_init_args={

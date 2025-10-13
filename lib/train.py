@@ -4,14 +4,16 @@ import numpy as np
 from torch import nn
 from lib.metrics import c_index
 
-torch.set_default_device("cuda" if torch.cuda.is_available() else "cpu")
 
-
-def train_loop(dataloader, model, loss_fn, optimizer, required_grad=True):
+def train_loop(dataloader, model, loss_fn, optimizer, device=None, required_grad=True):
     losses = []
     for _, (feature, label) in enumerate(dataloader):
         current_feat = feature.to(torch.float32)
         current_label = label.to(torch.float32)
+
+        if device:
+            current_feat = current_feat.to(device)
+            current_label = current_label.to(device)
 
         preds = model(current_feat)
         loss = loss_fn(preds, current_label[:, 0], current_label[:, 1])
@@ -36,13 +38,14 @@ def train_model_with_config(
     train_loader,
     validation_loader,
     test_loader,
+    device=None,
 ):
     avg_losses = []
     val_losses = []
     for _ in range(num_epoch):
         model.train()
 
-        epoch_loss = train_loop(train_loader, model, loss_fn, optimizer)
+        epoch_loss = train_loop(train_loader, model, loss_fn, optimizer, device)
         avg_losses.append(epoch_loss)
         scheduler.step()
 
@@ -54,6 +57,7 @@ def train_model_with_config(
                 model,
                 loss_fn,
                 optimizer,
+                device,
                 required_grad=False,
             )
             val_losses.append(val_loss)
@@ -65,6 +69,10 @@ def train_model_with_config(
             X = feature.to(torch.float32)
             y = label.to(torch.float32)
 
+            if device:
+                X = X.to(device)
+                y = y.to(device)
+
             preds = model(X)
             c_index_value = c_index(preds, y[:, 0], y[:, 1])
 
@@ -74,6 +82,10 @@ def train_model_with_config(
         for feature, label in train_loader:
             X = feature.to(torch.float32)
             y = label.to(torch.float32)
+
+            if device:
+                X = X.to(device)
+                y = y.to(device)
 
             preds = model(X)
             train_c_index_value = c_index(preds, y[:, 0], y[:, 1])
