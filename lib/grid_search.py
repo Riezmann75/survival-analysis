@@ -43,7 +43,12 @@ class GridSearch:
                             T_max=num_epoch,
                         )
                         try:
-                            avg_losses, val_losses, c_index_value = train_fn(
+                            (
+                                avg_losses,
+                                val_losses,
+                                c_index_value,
+                                train_c_index_value,
+                            ) = train_fn(
                                 model=model,
                                 optimizer=configured_optimizer,
                                 scheduler=scheduler,
@@ -64,7 +69,8 @@ class GridSearch:
                                     },
                                     "avg_losses": avg_losses,
                                     "val_losses": val_losses,
-                                    "c_index": c_index_value,
+                                    "test_c_index": c_index_value,
+                                    "train_c_index": train_c_index_value,
                                 }
                             )
                         except StopTrainingError as e:
@@ -86,6 +92,7 @@ class GridSearch:
                                     "avg_losses": None,
                                     "val_losses": None,
                                     "c_index": None,
+                                    "train_c_index": train_c_index_value,
                                     "error": str(e),
                                 }
                             )

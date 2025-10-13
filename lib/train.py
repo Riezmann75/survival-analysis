@@ -6,6 +6,7 @@ from lib.metrics import c_index
 
 torch.set_default_device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 def train_loop(dataloader, model, loss_fn, optimizer, required_grad=True):
     losses = []
     for _, (feature, label) in enumerate(dataloader):
@@ -67,4 +68,14 @@ def train_model_with_config(
             preds = model(X)
             c_index_value = c_index(preds, y[:, 0], y[:, 1])
 
-    return avg_losses, val_losses, c_index_value
+    # cindex on train set
+    model.eval()
+    with torch.no_grad():
+        for feature, label in train_loader:
+            X = feature.to(torch.float32)
+            y = label.to(torch.float32)
+
+            preds = model(X)
+            train_c_index_value = c_index(preds, y[:, 0], y[:, 1])
+
+    return avg_losses, val_losses, c_index_value, train_c_index_value
