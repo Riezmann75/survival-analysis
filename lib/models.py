@@ -52,13 +52,18 @@ class NeuralNetwork(BaseSurvivalClass):
         super().__init__(df, categorical_cols, numeric_cols)
 
         self.net = nn.Sequential(
-            nn.LazyLinear(16),
-            nn.ReLU(),
-            nn.Dropout(0.1),
+            nn.LazyLinear(128),
+            nn.LeakyReLU(0.1),
+            nn.LazyLinear(256),
+            nn.LeakyReLU(0.1),
+            nn.Dropout(0.2),
+            nn.LazyLinear(128),
+            nn.LeakyReLU(0.1),
+            nn.Dropout(0.2),
+            nn.LazyLinear(64),
+            nn.LeakyReLU(0.1),
             nn.LazyLinear(32),
-            nn.ReLU(),
-            nn.LazyLinear(16),
-            nn.ReLU(),
+            nn.LeakyReLU(0.1),
             nn.LazyLinear(1, bias=bias),
         )
 
@@ -75,7 +80,11 @@ class NLL(nn.Module):
 
     def forward(self, preds, failure_times, is_observed):
         # Number of observed events
-        return torch.sum(torch.exp(preds) * failure_times - is_observed * preds, dim=0)
+        return (
+            1
+            / len(preds)
+            * torch.sum(torch.exp(preds) * failure_times - is_observed * preds, dim=0)
+        )
 
 
 class ProfiledNLL(nn.Module):
