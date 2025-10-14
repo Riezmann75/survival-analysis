@@ -3,6 +3,7 @@ from lib.exception import StopTrainingError
 import numpy as np
 from torch import nn
 from lib.metrics import c_index
+from lib.transform import mixup_dataset
 
 
 def train_loop(dataloader, model, loss_fn, optimizer, device=None, required_grad=True):
@@ -15,9 +16,20 @@ def train_loop(dataloader, model, loss_fn, optimizer, device=None, required_grad
             current_feat = current_feat.to(device)
             current_label = current_label.to(device)
 
-        preds = model(current_feat)
-        loss = loss_fn(preds, current_label[:, 0], current_label[:, 1])
-        losses.append(loss.item())
+        embedded_feats = model.embed(current_feat)
+
+        # mixed_labels of shape (batch_size, num_stacked_tensors, num_features)
+        mixed_features, mixed_labels, lam = mixup_dataset(
+            embedded_feats,
+            current_label,
+            alpha=0.02,
+            device=device,
+        )
+        preds = model.net(mixed_features).squeeze()
+        loss = lam * loss_fn(preds, mixed_labels[:, 0, 0], mixed_labels[:, 0, 1]) + (
+            1 - lam
+        ) * loss_fn(preds, mixed_labels[:, 1, 0], mixed_labels[:, 1, 1])
+        losses.append(loss.item() * len(current_feat))
         if torch.isinf(loss):
             raise StopTrainingError("Loss is Inf!")
         if torch.isnan(loss):

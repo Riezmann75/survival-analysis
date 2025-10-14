@@ -6,6 +6,7 @@ from lib.utils import decorate_optimizer
 from torch.utils.data import DataLoader
 import torch
 import warnings
+import numpy as np
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
@@ -38,8 +39,8 @@ test_loader = DataLoader(
 
 search_space = SearchSpace.model_validate(
     {
-        "learning_rates": [5e-5, 1e-3, 5e-3, 1e-2, 5e-2],
-        "weight_decays": [1e-4, 1e-5, 1e-6, 1e-7],
+        "learning_rates": [1e-5, *np.arange(0.0001, 0.01, 0.0005)],
+        "weight_decays": [1e-1, 1e-2, 1e-3, 1e-4, 1e-5],
         "optimizers": [
             decorate_optimizer(torch.optim.Adam),
             decorate_optimizer(torch.optim.SGD),
