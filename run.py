@@ -39,13 +39,13 @@ test_loader = DataLoader(
 
 search_space = SearchSpace.model_validate(
     {
-        "learning_rates": [1e-5, *np.arange(0.0001, 0.01, 0.0005)],
-        "weight_decays": [1e-1, 1e-2, 1e-3, 1e-4, 1e-5],
+        "learning_rates": [*np.arange(0.0001, 0.01, 0.0005)],
+        "weight_decays": [1e-1, 1e-2, 1e-3, 1e-4],
         "optimizers": [
             decorate_optimizer(torch.optim.Adam),
             decorate_optimizer(torch.optim.SGD),
         ],
-        "num_epochs": [50, 100, 150],
+        "num_epochs": [100],
     }
 )
 
