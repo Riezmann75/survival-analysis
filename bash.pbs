@@ -23,4 +23,4 @@ TORCH_LOGS="+dynamo"
 TORCHDYNAMO_VERBOSE=1
 
 #run the file
-export python3 run.py
+python3 run.py

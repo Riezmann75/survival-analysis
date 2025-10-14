@@ -58,7 +58,7 @@ def train_model_with_config(
         model.train()
 
         epoch_loss = train_loop(train_loader, model, loss_fn, optimizer, device)
-        avg_losses.append(epoch_loss)
+        avg_losses.append(epoch_loss * len(train_loader) / len(train_loader.dataset))
         scheduler.step()
 
         # evaluate validation loss
