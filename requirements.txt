@@ -6,3 +6,4 @@ seaborn
 tqdm
 scikit-survival
 pydantic
+requests
