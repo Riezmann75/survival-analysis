@@ -7,6 +7,8 @@ import torch
 from lib.exception import StopTrainingError
 from lib.utils import parse_optimizer
 
+from tqdm import tqdm
+
 
 class SearchSpace(BaseModel):
     learning_rates: list
@@ -16,11 +18,12 @@ class SearchSpace(BaseModel):
 
 
 class GridSearch:
-    def __init__(self, search_space: SearchSpace):
+    def __init__(self, search_space: SearchSpace, device=None):
         self.learning_rates = search_space.learning_rates
         self.optimizers = search_space.optimizers
         self.weight_decays = search_space.weight_decays
         self.num_epochs = search_space.num_epochs
+        self.device = device
 
     def __call__(self, Model: nn.Module, train_fn, model_init_args=None, **kwargs):
         for optimizer in self.optimizers:
@@ -29,6 +32,7 @@ class GridSearch:
                     for num_epoch in self.num_epochs:
                         # average losses each epoch
                         model = Model(**model_init_args) if model_init_args else Model()
+                        model.to(self.device) if self.device else model.to("cpu")
                         configured_optimizer = optimizer(
                             lr=lr,
                             weight_decay=weight_decay,
@@ -43,11 +47,17 @@ class GridSearch:
                             T_max=num_epoch,
                         )
                         try:
-                            avg_losses, val_losses, c_index_value = train_fn(
+                            (
+                                avg_losses,
+                                val_losses,
+                                c_index_value,
+                                train_c_index_value,
+                            ) = train_fn(
                                 model=model,
                                 optimizer=configured_optimizer,
                                 scheduler=scheduler,
                                 num_epoch=num_epoch,
+                                device=self.device,
                                 **kwargs,
                             )
                             self.write_training_log(
@@ -64,7 +74,8 @@ class GridSearch:
                                     },
                                     "avg_losses": avg_losses,
                                     "val_losses": val_losses,
-                                    "c_index": c_index_value,
+                                    "test_c_index": c_index_value,
+                                    "train_c_index": train_c_index_value,
                                 }
                             )
                         except StopTrainingError as e:
@@ -86,6 +97,7 @@ class GridSearch:
                                     "avg_losses": None,
                                     "val_losses": None,
                                     "c_index": None,
+                                    "train_c_index": train_c_index_value,
                                     "error": str(e),
                                 }
                             )
